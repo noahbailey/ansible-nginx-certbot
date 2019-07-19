@@ -1,0 +1,87 @@
+# ------------------------------------------ Generate cert request and key
+# ------------------------------------------------------------------------
+
+- name: TLS Certificate Private key 
+  openssl_privatekey: 
+    path: /etc/nginx/ssl/{{ site.name }}.pem
+    type: RSA 
+
+- name: TLS Cert Request  
+  openssl_csr: 
+    path: /etc/nginx/ssl/{{ site.name }}.csr 
+    privatekey_path: /etc/nginx/ssl/{{ site.name }}.pem 
+    common_name: "{{ site.name }}"
+
+# ------------------------------------------------------- ACME Cert Req.
+# ------------------------------------------------------------------------
+
+- name: ACME Account Key
+  openssl_privatekey: 
+    path: /etc/nginx/ssl/acme_{{ site.name }}.pem
+    type: RSA 
+
+- name: ACME Cert Request 
+  acme_certificate: 
+    terms_agreed: true 
+    challenge: dns-01
+    acme_version: 2
+    acme_directory: https://acme-v02.api.letsencrypt.org/directory
+    account_email: "{{ cloudflare.email }}"
+    account_key: /etc/nginx/ssl/acme_{{ site.name }}.pem 
+    csr: /etc/nginx/ssl/{{ site.name }}.csr 
+    fullchain_dest: /etc/nginx/ssl/{{ site.name }}.crt
+  register: acme_dns_challenge 
+
+
+# ------------------------------------------------------- DNS Challenge 
+# ------------------------------------------------------------------------
+
+# Create TXT record in CloudFlare with challenge data 
+
+- name: CloudFlare DNS Challenge 
+  cloudflare_dns:  
+    state: present      # Add the record
+    account_api_token:  "{{ cloudflare.api_key }}"
+    account_email:      "{{ cloudflare.email }}"
+    zone:               "{{ cloudflare.domain }}"
+    type: TXT
+    record:             "{{ item['value']['dns-01']['record'] }}"
+    value:              "{{ item['value']['dns-01']['resource_value'] }}"
+  with_dict: "{{ acme_dns_challenge['challenge_data'] }}"
+  when: acme_dns_challenge.changed|bool
+
+- name: Wait for DNS to converge
+  wait_for: 
+    timeout: 30
+  when: acme_dns_challenge.changed|bool
+
+# ------------------------------------------------------- Verify Request 
+# ------------------------------------------------------------------------
+
+- name: Validate ACME request 
+  acme_certificate: 
+    terms_agreed: true 
+    acme_version: 2
+    acme_directory: https://acme-v02.api.letsencrypt.org/directory
+    challenge: dns-01
+    account_key: /etc/nginx/ssl/acme_{{ site.name }}.pem 
+    account_email: "{{ cloudflare.email }}"
+    csr: /etc/nginx/ssl/{{ site.name }}.csr 
+    fullchain_dest: /etc/nginx/ssl/{{ site.name }}.crt
+    data: "{{ acme_dns_challenge }}"
+  when: acme_dns_challenge.changed|bool
+
+
+# ------------------------------------------------------- Cleanup DNS 
+# ------------------------------------------------------------------------
+
+- name: Remove CloudFlare DNS Challenge 
+  cloudflare_dns:  
+    state: absent       # Remove the record  
+    account_api_token:  "{{ cloudflare.api_key }}"
+    account_email:      "{{ cloudflare.email }}"
+    zone:               "{{ cloudflare.domain }}"
+    type: TXT
+    record:             "{{ item['value']['dns-01']['record'] }}"
+  with_dict: "{{ acme_dns_challenge['challenge_data'] }}"
+  when: acme_dns_challenge.changed|bool

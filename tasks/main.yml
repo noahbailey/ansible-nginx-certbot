@@ -1,0 +1,31 @@
+# Configure nginx server 
+
+- name: Install nginx 
+  apt: 
+    state: present 
+    name: 
+    - nginx 
+    - openssl 
+    - ssl-cert
+    - certbot
+    - python-cryptography
+
+
+- name: Setup TLS certificates
+  include_tasks: certbot.yml
+  loop: "{{ sites }}"
+  loop_control: 
+    loop_var: site
+
+
+- name: Configure nginx 
+  import_tasks: config.yml
+
+
+- name: Setup nginx sites 
+  include_tasks: site.yml
+  loop: "{{ sites }}"
+  loop_control: 
+    loop_var: site
+
+

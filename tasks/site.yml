@@ -1,0 +1,15 @@
+# ------------------------------------------------------- per-site config
+# ------------------------------------------------------------------------
+
+- name: "{{ site.name }} :: Config file"
+  template: 
+    src: templates/site.conf.j2
+    dest: /etc/nginx/sites-available/{{ site.name }}.conf
+  notify: reload_nginx
+
+- name: "{{ site.name }} :: enable site"
+  file: 
+    state: link 
+    src: /etc/nginx/sites-available/{{ site.name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ site.name }}.conf 
+  notify: reload_nginx
