@@ -1,4 +1,4 @@
-upstream application_servers {
+upstream backend_{{ site.name }} {
     ip_hash; 
 {% for i in site.backends %}
     server {{ i.host }}; 
@@ -24,7 +24,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto https;
         proxy_redirect off;
-        proxy_pass http://application_servers;
+        proxy_pass http://backend_{{ site.name }};
     }
 
     ssl on;
