@@ -1,3 +1,8 @@
+#           \                 _)  |      |       
+#          _ \    __ \    __|  |  __ \   |   _ \ 
+#         ___ \   |   | \__ \  |  |   |  |   __/ 
+#       _/    _\ _|  _| ____/ _| _.__/  _| \___| 
+
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -19,7 +24,7 @@ http {
 	tcp_nodelay on;
 	keepalive_timeout 65;
 	types_hash_max_size 2048;
-	# server_tokens off;
+	server_tokens off;
 
 	# server_names_hash_bucket_size 64;
 	# server_name_in_redirect off;

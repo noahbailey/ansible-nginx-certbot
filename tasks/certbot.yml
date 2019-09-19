@@ -22,7 +22,8 @@
 
 - name: "{{ site.name }} :: ACME Cert Request "
   acme_certificate: 
-    terms_agreed: true 
+    terms_agreed: true
+    remaining_days: 35 
     challenge: dns-01
     acme_version: 2
     acme_directory: https://acme-v02.api.letsencrypt.org/directory
@@ -61,15 +62,17 @@
 - name: "{{ site.name }} :: Validate ACME request" 
   acme_certificate: 
     terms_agreed: true 
+    remaining_days: 35 
     acme_version: 2
-    acme_directory: https://acme-v02.api.letsencrypt.org/directory
     challenge: dns-01
+    acme_directory: https://acme-v02.api.letsencrypt.org/directory
     account_key: /etc/nginx/ssl/acme_{{ site.name }}.pem 
     account_email: "{{ cloudflare.email }}"
     csr: /etc/nginx/ssl/{{ site.name }}.csr 
     fullchain_dest: /etc/nginx/ssl/{{ site.name }}.crt
     data: "{{ acme_dns_challenge }}"
   when: acme_dns_challenge.changed|bool
+  notify: reload_nginx
 
 
 # ------------------------------------------------------- Cleanup DNS 
