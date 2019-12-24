@@ -30,7 +30,11 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto https;
         proxy_redirect off;
+{% if site.upstream_https is not defined %}
         proxy_pass http://backend_{{ site.name }};
+{% elif site.upstream_https %}
+        proxy_pass https://backend_{{ site.name }};
+{% endif %}
     }
 
     ssl on;
