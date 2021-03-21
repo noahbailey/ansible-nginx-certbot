@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: ansible_isc_dhcpd
+  role_name: ansible_nginx_certbot
   author: Noah Bailey
   description: Reverse proxy with Nginx and Cloudflare DNS challenge
   license: GPLv3
