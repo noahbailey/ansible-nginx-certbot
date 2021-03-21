@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: ansible_isc_dhcpd
+  author: Noah Bailey
+  description: Reverse proxy with Nginx and Cloudflare DNS challenge
+  license: GPLv3
+  min_ansible_version: 2.9
+  galaxy_tags: []
+dependencies: []
